@@ -1,0 +1,15 @@
+# Tous les fichiers texte restent en LF
+* text=auto eol=lf
+
+# Scripts Windows
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Scripts Unix
+*.sh text eol=lf
+
+# Docker / Symfony
+Dockerfile text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.env text eol=lf

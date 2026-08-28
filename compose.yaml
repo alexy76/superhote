@@ -1,0 +1,60 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+    container_name: superhote_app
+    working_dir: /var/www/html
+    volumes:
+      - ./backend:/var/www/html
+    environment:
+      MARIADB_DATABASE: ${MARIADB_DATABASE}
+      MARIADB_USER: ${MARIADB_USER}
+      MARIADB_PASSWORD: ${MARIADB_PASSWORD}
+    depends_on:
+      mariadb:
+        condition: service_healthy
+    networks:
+      - superhote
+
+  nginx:
+    image: nginx:1.29-alpine
+    container_name: superhote_nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./backend:/var/www/html:ro
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - app
+    networks:
+      - superhote
+
+  mariadb:
+    image: mariadb:12.3
+    container_name: superhote_db
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
+      MARIADB_DATABASE: ${MARIADB_DATABASE}
+      MARIADB_USER: ${MARIADB_USER}
+      MARIADB_PASSWORD: ${MARIADB_PASSWORD}
+    healthcheck:
+      test: ["CMD", "mariadb-admin", "ping", "-h", "localhost", "-uroot", "-p${MARIADB_ROOT_PASSWORD}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+    ports:
+      - "3306:3306"
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    networks:
+      - superhote
+
+volumes:
+  mariadb_data:
+
+networks:
+  superhote:
+    driver: bridge
